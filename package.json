@@ -1,5 +1,5 @@
 {
-  "name": "@tinyland-inc/tinyland-credentials-generator",
+  "name": "@tummycrypt/tinyland-credentials-generator",
   "version": "0.1.0",
   "description": "Professional credentials card generator with QR codes for TOTP setup",
   "type": "module",
@@ -44,5 +44,9 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
 }
