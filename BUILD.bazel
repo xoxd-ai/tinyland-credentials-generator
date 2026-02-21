@@ -32,7 +32,6 @@ ts_project(
         "//:node_modules/qrcode",
         "//:node_modules/@types/node",
         "//:node_modules/@types/qrcode",
-        "//:node_modules/@types/node",
     ],
     visibility = ["//visibility:public"],
 )
