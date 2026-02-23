@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// ---------------------------------------------------------------------------
-// Mocks — vi.mock calls are hoisted; factories must NOT reference outer vars.
-// ---------------------------------------------------------------------------
+
+
+
 
 vi.mock('sharp', () => {
   const mockToBuffer = vi.fn().mockResolvedValue(Buffer.from('mock-png'));
@@ -31,9 +31,9 @@ vi.mock('fs/promises', () => ({
   readFile: vi.fn().mockResolvedValue(Buffer.from('mock-logo')),
 }));
 
-// ---------------------------------------------------------------------------
-// Imports under test (after mocks)
-// ---------------------------------------------------------------------------
+
+
+
 
 import {
   maskPassword,
@@ -52,19 +52,19 @@ import type {
   CardDesignOptions,
 } from '../src/index.js';
 
-// Import mocked modules so we can inspect / reconfigure them
+
 import sharp from 'sharp';
 import * as QRCode from 'qrcode';
 import * as fsPromises from 'fs/promises';
 
-// Cast to mocked types for easy access
+
 const mockSharp = vi.mocked(sharp);
 const mockQRCodeToBuffer = vi.mocked(QRCode.toBuffer);
 const mockReadFile = vi.mocked(fsPromises.readFile);
 
-// Helper to get the internal mock instance methods
+
 function getSharpInstance() {
-  // The factory returns the same instance each call
+  
   const inst = mockSharp.mock.results[0]?.value;
   return inst as {
     resize: ReturnType<typeof vi.fn>;
@@ -74,9 +74,9 @@ function getSharpInstance() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+
+
+
 
 function makeCardData(overrides: Partial<CredentialsCardData> = {}): CredentialsCardData {
   return {
@@ -88,9 +88,9 @@ function makeCardData(overrides: Partial<CredentialsCardData> = {}): Credentials
   };
 }
 
-// ---------------------------------------------------------------------------
-// 1. Types (structural / compile-time, verified at runtime via shape checks)
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('Types', () => {
   it('should accept a minimal CredentialsCardData object', () => {
@@ -144,9 +144,9 @@ describe('Types', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 2. Config DI
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('Config DI', () => {
   afterEach(() => {
@@ -226,9 +226,9 @@ describe('Config DI', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 3. maskPassword
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('maskPassword', () => {
   it('should fully mask passwords of 4 characters or fewer', () => {
@@ -263,7 +263,7 @@ describe('maskPassword', () => {
 
   it('should show first 2 and last 2 chars for normal password', () => {
     const result = maskPassword('SuperSecret123!');
-    // length 15: first 2 + 11 bullets + last 2
+    
     expect(result.startsWith('Su')).toBe(true);
     expect(result.endsWith('3!')).toBe(true);
     expect(result.length).toBe(15);
@@ -271,7 +271,7 @@ describe('maskPassword', () => {
 
   it('should produce correct bullet count for 8-char password', () => {
     const result = maskPassword('12345678');
-    // 2 + 4 bullets + 2
+    
     expect(result).toBe('12\u2022\u2022\u2022\u202278');
   });
 
@@ -298,7 +298,7 @@ describe('maskPassword', () => {
 
   it('should handle unicode characters', () => {
     const result = maskPassword('\u00E9\u00E8\u00EA\u00EB\u00E0');
-    // length 5: first 2 + 1 bullet + last 2
+    
     expect(result.startsWith('\u00E9\u00E8')).toBe(true);
     expect(result.endsWith('\u00EB\u00E0')).toBe(true);
   });
@@ -319,9 +319,9 @@ describe('maskPassword', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 4. escapeXml
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('escapeXml', () => {
   it('should escape ampersand', () => {
@@ -385,7 +385,7 @@ describe('escapeXml', () => {
   });
 
   it('should escape already-escaped ampersand (no idempotency)', () => {
-    // Note: escapeXml is NOT idempotent by design -- double-escaping is expected
+    
     expect(escapeXml('&amp;')).toBe('&amp;amp;');
   });
 
@@ -401,9 +401,9 @@ describe('escapeXml', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 5. generateCredentialsCard
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('generateCredentialsCard', () => {
   beforeEach(() => {
@@ -511,7 +511,7 @@ describe('generateCredentialsCard', () => {
   it('should resize logo to 60x60', async () => {
     configure({ logoPath: '/tmp/logo.png' });
     await generateCredentialsCard(makeCardData());
-    // The second call to sharp() is for logo resizing
+    
     expect(mockSharp).toHaveBeenCalledTimes(2);
     const logoSharpInst = mockSharp.mock.results[1].value;
     expect(logoSharpInst.resize).toHaveBeenCalledWith(60, 60, { fit: 'inside' });
@@ -555,7 +555,7 @@ describe('generateCredentialsCard', () => {
     await generateCredentialsCard(data);
     const svgBuffer = mockSharp.mock.calls[0][0] as Buffer;
     const svgString = svgBuffer.toString();
-    // maskPassword('LongPassword99') starts with 'Lo' and ends with '99'
+    
     expect(svgString).toContain('Lo');
     expect(svgString).toContain('99');
   });
@@ -628,9 +628,9 @@ describe('generateCredentialsCard', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 6. generateTextCredentialsCard
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('generateTextCredentialsCard', () => {
   it('should return a string', async () => {
@@ -654,7 +654,7 @@ describe('generateTextCredentialsCard', () => {
     const result = await generateTextCredentialsCard(
       makeCardData({ tempPassword: 'MySecret88!' }),
     );
-    // maskPassword('MySecret88!') => 'My' + 7 bullets + '8!'
+    
     expect(result).toContain('My');
     expect(result).toContain('8!');
     expect(result).toContain('\u2022');
@@ -698,7 +698,7 @@ describe('generateTextCredentialsCard', () => {
 
   it('should contain border decoration characters', async () => {
     const result = await generateTextCredentialsCard(makeCardData());
-    // Unicode box drawing double horizontal
+    
     expect(result).toContain('\u2550');
   });
 
@@ -733,9 +733,9 @@ describe('generateTextCredentialsCard', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 7. generateCredentialsPackage
-// ---------------------------------------------------------------------------
+
+
+
 
 describe('generateCredentialsPackage', () => {
   beforeEach(() => {
@@ -779,7 +779,7 @@ describe('generateCredentialsPackage', () => {
     const before = Date.now();
     const result = await generateCredentialsPackage(makeCardData());
     const after = Date.now();
-    // Extract timestamp from filename: credentials-username-TIMESTAMP
+    
     const parts = result.filename.split('-');
     const ts = parseInt(parts[parts.length - 1], 10);
     expect(ts).toBeGreaterThanOrEqual(before);
