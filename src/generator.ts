@@ -5,21 +5,21 @@ import type { CredentialsCardData, CardDesignOptions } from './types.js';
 import { getConfig } from './config.js';
 import { maskPassword, escapeXml } from './helpers.js';
 
-/**
- * Default card design — Stonewall / Tinyland branding.
- */
+
+
+
 export const DEFAULT_DESIGN: Required<CardDesignOptions> = {
   width: 800,
   height: 1200,
   backgroundColor: '#ffffff',
   primaryColor: '#1a1a1a',
-  accentColor: '#e91e63', // Pink accent for Stonewall branding
+  accentColor: '#e91e63', 
   fontFamily: 'Arial, sans-serif',
 };
 
-/**
- * Generate a credentials card PNG image with all setup information.
- */
+
+
+
 export async function generateCredentialsCard(
   data: CredentialsCardData,
   options: CardDesignOptions = {},
@@ -28,7 +28,7 @@ export async function generateCredentialsCard(
   const { width, height, backgroundColor, primaryColor, accentColor } = design;
 
   try {
-    // Generate QR code for TOTP
+    
     const qrCodeBuffer = await QRCode.toBuffer(data.totpUri, {
       errorCorrectionLevel: 'M',
       margin: 2,
@@ -39,18 +39,18 @@ export async function generateCredentialsCard(
       },
     });
 
-    // Load logo via DI config (graceful fallback if unavailable)
+    
     let logoBuffer: Buffer | null = null;
     const { logoPath } = getConfig();
     if (logoPath) {
       try {
         logoBuffer = await fs.readFile(logoPath);
       } catch {
-        // Logo not found — continue without it
+        
       }
     }
 
-    // Create SVG template for the card
+    
     const cardSvg = `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="${backgroundColor}"/>
@@ -152,11 +152,11 @@ export async function generateCredentialsCard(
       </svg>
     `;
 
-    // Convert SVG to image
+    
     const svgBuffer = Buffer.from(cardSvg);
     const baseImage = sharp(svgBuffer);
 
-    // Composite the QR code onto the card
+    
     const composites: sharp.OverlayOptions[] = [
       {
         input: qrCodeBuffer,
@@ -165,7 +165,7 @@ export async function generateCredentialsCard(
       },
     ];
 
-    // Add logo if available
+    
     if (logoBuffer) {
       const resizedLogo = await sharp(logoBuffer)
         .resize(60, 60, { fit: 'inside' })
@@ -178,7 +178,7 @@ export async function generateCredentialsCard(
       });
     }
 
-    // Generate final image
+    
     const finalImage = await baseImage.composite(composites).png().toBuffer();
 
     return finalImage;
@@ -188,9 +188,9 @@ export async function generateCredentialsCard(
   }
 }
 
-/**
- * Generate a simplified text-based credentials card (fallback).
- */
+
+
+
 export async function generateTextCredentialsCard(
   data: CredentialsCardData,
 ): Promise<string> {
@@ -238,9 +238,9 @@ ${border}
 `;
 }
 
-/**
- * Generate both image and text versions of the credentials card.
- */
+
+
+
 export async function generateCredentialsPackage(
   data: CredentialsCardData,
   options?: CardDesignOptions,
